@@ -1,38 +1,94 @@
-import styled from "styled-components";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
+import {
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+import Dashboard from "./pages/Dashboard";
+import Bookings from "./pages/Bookings";
+import Cabins from "./pages/Cabins";
+import Users from "./pages/Users";
+import Settings from "./pages/Settings";
+import Account from "./pages/Account";
+import Login from "./pages/Login";
+import PageNotFound from "./pages/PageNotFound";
 import GlobalStyles from "./styles/GlobalStyles";
-import { Button } from "./Button";
+import AppLayout from "./ui/AppLayout";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // staleTime: 60 * 1000,
+      staleTime: 0,
+    },
+  },
+});
 
 function App() {
   return (
-    <>
+    <QueryClientProvider
+      client={queryClient}
+    >
+      <ReactQueryDevtools
+        initialIsOpen={false}
+      />
       <GlobalStyles />
-      <StyledApp>
-        <H1>The wild Oasis</H1>
-        <Button onClick={() => alert("check in")}>Check in</Button>
-        <Button onClick={() => alert("check in")}>Check in</Button>
-        <Input />
-      </StyledApp>
-    </>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route
+              index
+              element={
+                <Navigate
+                  replace
+                  to={"dashboard"}
+                />
+              }
+            />
+            <Route
+              path='dashboard'
+              element={<Dashboard />}
+            />
+            <Route
+              path='bookings'
+              element={<Bookings />}
+            />
+            <Route
+              path='cabins'
+              element={<Cabins />}
+            />
+            <Route
+              path='users'
+              element={<Users />}
+            />
+            <Route
+              path='settings'
+              element={<Settings />}
+            />
+            <Route
+              path='account'
+              element={<Account />}
+            />
+          </Route>
+
+          <Route
+            path='login'
+            element={<Login />}
+          />
+          <Route
+            path='*'
+            element={<PageNotFound />}
+          />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
-
+//
 export default App;
-
-const H1 = styled.h1`
-  font-size: 30px;
-  font-weight: 600;
-  background-color: yellow;
-`;
-
-const Input = styled.input`
-  border: 1px solid var(--color-grey-300);
-  background-color: var(--color-grey-0);
-  border-radius: var(--border-radius-sm);
-  box-shadow: var(--shadow-sm);
-  padding: 0.8rem 1.2rem;
-`;
-
-const StyledApp = styled.div`
-  background-color: orangered;
-  padding: 20px;
-`;
