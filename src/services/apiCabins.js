@@ -11,27 +11,42 @@ export async function getCabins() {
   return data;
 }
 
-export async function createCabin(newCabin) {
+export async function createEditCabin(newCabin, id) {
+  const hasImagePath = newCabin.image?.startsWith?.(supabaseUrl);
+
   const imageName = `${Math.random()}-${newCabin.image.name}`.replaceAll(
     "/",
     ""
   );
-  const imagePath = `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
+  const imagePath = hasImagePath
+    ? newCabin.image
+    : `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
   // https://zkkmpreclxykgmlmuzjw.supabase.co/storage/v1/object/public/cabin-images/cabin-001.jpg
   // https://zkkmpreclxykgmlmuzjw.supabase.co/storage/v1/object/public/cabin-images/cabin-001.jpg?t=2024-02-07T13%3A07%3A14.616Z
 
   // 1. create cabin
-  const { data, error } = await supabase
-    .from("cabins")
-    .insert([{ ...newCabin, image: imagePath }])
-    .select();
+  let query = supabase.from("cabins");
+
+  // A) Create
+  if (!id) query = query.insert([{ ...newCabin, image: imagePath }]);
+
+  // B) Edit
+  if (id)
+    query = query
+      .update({ ...newCabin, image: imagePath })
+      .eq("id", id)
+      .select();
+
+  const { data, error } = await query.select().single();
 
   if (error) {
     console.error(error);
     throw new Error("Cabins could not be created");
   }
 
-  // 2. add image
+  // 2. upload image
+  if (hasImagePath) return data;
+
   const { error: storageError } = await supabase.storage
     .from("cabin-images")
     .upload(imageName, newCabin.image);
@@ -40,15 +55,13 @@ export async function createCabin(newCabin) {
   if (storageError) {
     console.error(storageError);
     await supabase.from("cabins").delete().eq("id", data.id);
-    // await supabase.from("cabins").delete().eq("id", data.id);
     throw new Error("error while uploading image");
   }
 
   return data;
 }
 
-export async function deleteCabin(id) {
-  console.log(id);
+export async function deleteCabinApi(id) {
   const { data, error } = await supabase
     .from("cabins")
     .delete()

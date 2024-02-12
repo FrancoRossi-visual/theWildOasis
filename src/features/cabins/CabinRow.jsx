@@ -1,11 +1,71 @@
 /* eslint-disable react/prop-types */
-import styled from "styled-components";
-import { formatCurrency } from "../../utils/helpers";
-import { deleteCabin } from "../../services/apiCabins";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
 import { useState } from "react";
+import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
+import styled from "styled-components";
+
+import { formatCurrency } from "../../utils/helpers";
 import CreateCabinForm from "./CreateCabinForm";
+import useDeleteCabin from "./useDeleteCabin";
+import useCreateCabin from "./useCreateCabin";
+
+function CabinRow({ cabin }) {
+  const [showForm, setShowForm] = useState(false);
+  const { isDeleting, deleteCabin } = useDeleteCabin();
+  const { isCreating, createNewCabin } = useCreateCabin();
+
+  const {
+    name,
+    maxCapacity,
+    regularPrice,
+    discount,
+    image,
+    description,
+    id: cabinId,
+  } = cabin;
+
+  function handleDuplicate() {
+    createNewCabin({
+      name: `Copy of ${name}`,
+      maxCapacity,
+      regularPrice,
+      discount,
+      description,
+      image,
+    });
+  }
+  return (
+    <>
+      <TableRow role='row'>
+        <Img src={image} />
+        <Cabin>{name}</Cabin>
+        <div>Fits up to {maxCapacity}</div>
+        <Price>{formatCurrency(regularPrice)}</Price>
+        {discount ? (
+          <Discount>{formatCurrency(discount)}</Discount>
+        ) : (
+          <span>&mdash;</span>
+        )}
+        <div style={{ display: "flex", gap: ".25rem" }}>
+          <button disabled={isCreating} onClick={() => handleDuplicate()}>
+            <HiSquare2Stack />
+          </button>
+          <button onClick={() => setShowForm(!showForm)}>
+            <HiPencil />
+          </button>
+          <button
+            onClick={() => deleteCabin(cabinId)}
+            disabled={isDeleting}
+          >
+            <HiTrash />
+          </button>
+        </div>
+      </TableRow>
+      {showForm && <CreateCabinForm cabinToEdit={cabin} />}
+    </>
+  );
+}
+
+export default CabinRow;
 
 const TableRow = styled.div`
   display: grid;
@@ -45,49 +105,3 @@ const Discount = styled.div`
   font-weight: 500;
   color: var(--color-green-700);
 `;
-
-function CabinRow({ cabin }) {
-  const [showForm, setShowForm] = useState(false);
-
-  const {
-    name,
-    maxCapacity,
-    regularPrice,
-    discount,
-    image,
-    id: cabinId,
-  } = cabin;
-
-  const queryClient = useQueryClient();
-
-  const { isLoading: isDeleting, mutate } = useMutation({
-    mutationFn: deleteCabin,
-    onSuccess: () => {
-      toast.success("Cabin successfully deleted"),
-        queryClient.invalidateQueries({
-          queryKey: ["cabins"],
-        });
-    },
-    onError: (err) => toast.error(err.message),
-  });
-  return (
-    <>
-      <TableRow role='row'>
-        <Img src={image} />
-        <Cabin>{name}</Cabin>
-        <div>Fits up to {maxCapacity}</div>
-        <Price>{formatCurrency(regularPrice)}</Price>
-        <Discount>{formatCurrency(discount)}</Discount>
-        <div style={{ display: "flex", gap: "1rem" }}>
-          <button onClick={() => setShowForm(!showForm)}>Edit</button>
-          <button onClick={() => mutate(cabinId)} disabled={isDeleting}>
-            Delete
-          </button>
-        </div>
-      </TableRow>
-      {showForm && <CreateCabinForm cabinToEdit={cabin} />}
-    </>
-  );
-}
-
-export default CabinRow;
