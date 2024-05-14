@@ -1,19 +1,9 @@
 /* eslint-disable react/prop-types */
-import { createContext, useState } from "react";
 import { createPortal } from "react-dom";
 import { HiXMark } from "react-icons/hi2";
 import styled from "styled-components";
 
-const ModalContext = createContext();
-
-function Modal({ children }) {
-  const [openName, setOpenName] = useState("");
-
-  const close = () => setOpenName("");
-  const open = setOpenName;
-}
-
-function Window({ children, onClose }) {
+function Modal({ children, onClose }) {
   return createPortal(
     <Overlay>
       <StyledModal>
