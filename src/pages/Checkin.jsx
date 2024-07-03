@@ -1,6 +1,6 @@
 import CheckinBooking from '../features/check-in-out/CheckinBooking';
 
 function Checkin() {
-  return <CheckinBooking>Checkin</CheckinBooking>;
+  return <CheckinBooking />;
 }
 export default Checkin;
